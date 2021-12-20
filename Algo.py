@@ -1,5 +1,6 @@
 import pygame
 import random
+import math
 
 pygame.init()
 
@@ -37,7 +38,7 @@ class Information():
         self.max_val = max(list)
         self.min_val = min(list)
         self.block_width = (self.width - self.SIDE_PAD) / len(list)
-        self.block_height = (self.height - self.TOP_PAD) / (self.max_val - self.min_val)
+        self.block_height = math.floor((self.height - self.TOP_PAD) / (self.max_val - self.min_val))
         self.start_x = self.SIDE_PAD // 2
 
 
@@ -49,11 +50,14 @@ def GenerateList(n, min_val, max_val):
 def draw(draw_info):
     draw_info.window.fill(draw_info.WHITE)
 
-    menu = draw_info.FONT.render('Write here you wanted....', 1, draw_info.BLACK)
-    draw_info.window.blit(menu, (draw_info.width / 2 - menu.get_width() / 2, 5))
+    title = draw_info.FONT.render('Sorting Algorithm', 1, draw_info.BLACK)
+    draw_info.window.blit(title, (draw_info.width / 2 - title.get_width() / 2, 5))
 
-    sortMenu = draw_info.FONT.render('Write here you wanted....', 1, draw_info.BLACK)
-    draw_info.window.blit(sortMenu, (draw_info.width / 2 - sortMenu.get_width() / 2, 35))
+    menu = draw_info.FONT.render('r: reset || space: start || a: assending || d: decsending', 1, draw_info.BLACK)
+    draw_info.window.blit(menu, (draw_info.width / 2 - menu.get_width() / 2, 35))
+
+    sortMenu = draw_info.FONT.render('i: Insert Sort  b: Bubble Srot', 1, draw_info.BLACK)
+    draw_info.window.blit(sortMenu, (draw_info.width / 2 - sortMenu.get_width() / 2, 75))
 
     draw_bar(draw_info)
     pygame.display.update()
@@ -74,12 +78,13 @@ def draw_bar(draw_info, color_pos={}, clear_bg=False):
             color = color_pos[i]
 
         pygame.draw.rect(draw_info.window, color, (x, y, draw_info.block_width, draw_info.height))
-        if clear_bg:
-            pygame.display.update()
+
+    if clear_bg:
+        pygame.display.update()
 
 
 def bubbleSort(draw_info, accending=True):
-    #lst = draw_info.list
+    # lst = draw_info.list
     for i in range(len(draw_info.list) - 1):
         for j in range(len(draw_info.list) - 1 - i):
             num1 = draw_info.list[j]
@@ -92,6 +97,25 @@ def bubbleSort(draw_info, accending=True):
     return draw_info.list
 
 
+def insertSort(draw_info, accending=True):
+    for i in range(1, len(draw_info.list)):
+        cur = draw_info.list[i]
+        while True:
+            accending_sort = i > 0 and draw_info.list[i - 1] > cur and accending
+            decending_sort = i > 0 and draw_info.list[i - 1] < cur and not accending
+
+            if not accending_sort and not decending_sort:
+                break
+
+            draw_info.list[i] = draw_info.list[i - 1]
+            i = i - 1
+            draw_info.list[i] = cur
+            draw_bar(draw_info, {i: draw_info.GREEN, i - 1: draw_info.RED}, True)
+            yield True
+
+    return draw_info.list
+
+
 def main():
     run = True
     clock = pygame.time.Clock()
@@ -100,11 +124,11 @@ def main():
     sorting = False
     accending = True
 
-    algorithm1 = bubbleSort
+    algorithm = bubbleSort
     sorting_generate = None
-
+    algorithm_name = "Bubble Sort"
     while run:
-        clock.tick(60)
+        clock.tick(10)
         if sorting:
             try:
                 next(sorting_generate)
@@ -124,11 +148,17 @@ def main():
                 sorting = False
             elif sorting == False and event.key == pygame.K_SPACE:
                 sorting = True
-                sorting_generate = algorithm1(info, accending)
+                sorting_generate = algorithm(info, accending)
             elif not sorting and event.key == pygame.K_a:
                 accending = True
             elif not sorting and event.key == pygame.K_d:
                 accending = False
+            elif not sorting and event.key == pygame.K_i:
+                algorithm = insertSort
+                algorithm_name = "Insert Sort..."
+            elif not sorting and event.key == pygame.K_b:
+                algorithm = bubbleSort
+                algorithm_name = "Bubble Sort..."
 
     pygame.quit()
 
